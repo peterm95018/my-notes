@@ -1,56 +1,35 @@
 angular.module('mynotes.notestore', [])
-.factory("NoteStore", function() {
+  .factory('NoteStore', function($http) {
 
-  var notes = angular.fromJson(window.localStorage['notes'] || '[]');
+    var apiUrl = 'http://localhost:8200';
 
-  function persist() {
-    window.localStorage['notes'] = angular.toJson(notes);
-  }
+    return {
 
-  return {
-    list: function() {
-      return notes;
-    },
-    
-    get: function(noteId) {
-      for (var i = 0; i < notes.length; i++) {   
-        if (notes[i].id === noteId) {
-          return notes[i];
-        }
+      list: function() {
+        return $http.get(apiUrl + '/notes/').then(function(response) {
+          return response.data;
+        });
+      },
+
+      get: function(noteId) {
+        return $http.get(apiUrl + '/notes/' + noteId)
+          .then(function(response) {
+            return response.data;
+          });
+      },
+
+      create: function(note) {
+        return $http.post(apiUrl + '/notes/', note);
+      },
+
+      update: function(note) {
+        return $http.put(apiUrl + '/notes/' + note.id, note);
+      },
+
+      remove: function(noteId) {
+        return $http.delete(apiUrl + '/notes/' + noteId);
       }
-      return undefined;
-    }, 
 
-    create: function(note) {
-      notes.push(note);
-      persist();
-    },
+    };
 
-    update: function(note) {
-        for (var i = 0; i < notes.length; i++) {   
-          if (notes[i].id === note.id) {
-          notes[i] = note;
-          persist();
-        return;
-      }
-    }
-  },
-
-    move: function(note, fromIndex, toIndex) {
-      notes.splice(fromIndex, 1);
-      notes.splice(toIndex, 0, note);
-      persist();
-    },
-
-    remove: function(noteId) {
-      for (var i = 0; i < notes.length; i++) {
-        if (notes[i].id === noteId) {
-          notes.splice(i, 1);
-          persist();
-          return;
-        }
-      }
-    }
-};
-
-});
+  });
